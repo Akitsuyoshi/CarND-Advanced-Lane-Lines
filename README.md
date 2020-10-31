@@ -1,25 +1,44 @@
-# Advanced Lane Finding
+## Advanced Lane Finding
+
 This is my second project of [Self-Driving Car Engineer nanodegree program](https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013) in udacity.
-![Lanes Image](./examples/example_output.jpg)
 
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
+You can see the first project at [this link](https://github.com/Akitsuyoshi/CarND-LaneLines-P1).
 
 ---
 
-**Advanced Lane Finding Project**
+## Table of Contents
 
-The goals / steps of this project are the following:
+- [Advanced Lane Finding](#advanced-lane-finding)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Pipeline Steps](#pipeline-steps)
+  - [0 Setting](#0-setting)
+  - [1 Camera calibration](#1-camera-calibration)
+  - [2 Distortion correction](#2-distortion-correction)
+  - [3 Color/gradient threshold](#3-colorgradient-threshold)
+  - [4 Perspective transform](#4-perspective-transform)
+  - [5 Detect lane lines](#5-detect-lane-lines)
+  - [6 Determine lane curvature](#6-determine-lane-curvature)
+  - [7 Warp lane boundaries](#7-warp-lane-boundaries)
+- [Pipeline Output](#pipeline-output)
+  - [Image result](#image-result)
+  - [Video result](#video-result)
+- [Discussion](#discussion)
+  - [Problem during my implementation](#problem-during-my-implementation)
+  - [Where my current pipeline will likey fail](#where-my-current-pipeline-will-likey-fail)
+  - [Improvements to pipeline](#improvements-to-pipeline)
+  - [Future Feature](#future-feature)
+- [References](#references)
+- [Issues](#issues)
 
-* Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
-* Apply a distortion correction to raw images.
-* Use color transforms, gradients, etc., to create a thresholded binary image.
-* Apply a perspective transform to rectify binary image ("birds-eye view").
-* Detect lane pixels and fit to find the lane boundary.
-* Determine the curvature of the lane and vehicle position with respect to center.
-* Warp the detected lane boundaries back onto the original image.
-* Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
+---
+
+## Overview
+
+Here is my goal of this project:
+
+- Make pipeline to identify the lane boundaries in a video from a front-facing camera on a car
+- Reflect on my work
 
 [//]: # (Image References)
 
@@ -31,21 +50,32 @@ The goals / steps of this project are the following:
 [image6]: ./examples/example_output.jpg "Output"
 [video1]: ./project_video.mp4 "Video"
 
-## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
-
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
 ---
 
-### Writeup / README
+## Pipeline Steps
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
+The steps for making that pipeline are the following:
 
-You're reading it!
+- Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
+- Apply a distortion correction to raw images.
+- Use color transforms, gradients, etc., to create a thresholded binary image.
+- Apply a perspective transform to rectify binary image ("birds-eye view").
+- Detect lane pixels and fit to find the lane boundary.
+- Determine the curvature of the lane and vehicle position with respect to center.
+- Warp the detected lane boundaries back onto the original image.
+- Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
-### Camera Calibration
+### 0 Setting
 
-#### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
+To set it up to run this script at first, I followd this [starter kit](https://github.com/udacity/CarND-Term1-Starter-Kit) with docker. If you use mac and docker was installed successfuly, you can run jupyter notebook on your local machine by the command below.
+
+```sh
+docker run -it --rm --entrypoint "/run.sh" -p 8888:8888 -v `pwd`:/src udacity/carnd-term1-starter-kit
+```
+
+### 1 Camera calibration
+
+(1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image)
 
 The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
 
@@ -55,20 +85,24 @@ I then used the output `objpoints` and `imgpoints` to compute the camera calibra
 
 ![alt text][image1]
 
-### Pipeline (single images)
+### 2 Distortion correction
 
-#### 1. Provide an example of a distortion-corrected image.
+(1. Provide an example of a distortion-corrected image.)
 
 To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
 ![alt text][image2]
 
-#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+### 3 Color/gradient threshold
+
+(2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.)
 
 I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
 
 ![alt text][image3]
 
-#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+### 4 Perspective transform
+
+(3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.)
 
 The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
 
@@ -98,17 +132,23 @@ I verified that my perspective transform was working as expected by drawing the 
 
 ![alt text][image4]
 
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+### 5 Detect lane lines
+
+(4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?)
 
 Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
 
 ![alt text][image5]
 
-#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
+### 6 Determine lane curvature
+
+(5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.)
 
 I did this in lines # through # in my code in `my_other_file.py`
 
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+### 7 Warp lane boundaries
+
+(6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.)
 
 I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
 
@@ -116,16 +156,37 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 ---
 
-### Pipeline (video)
+## Pipeline Output
 
-#### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
+### Image result
+
+### Video result
+
+(1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).)
 
 Here's a [link to my video result](./project_video.mp4)
 
 ---
 
-### Discussion
+## Discussion
 
-#### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
+### Problem during my implementation
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+### Where my current pipeline will likey fail
+
+### Improvements to pipeline
+
+### Future Feature
+
+---
+
+## References
+
+something might be here
+
+---
+
+## Issues
+
+Feel free to submit issues and enhancement requests.
+If you see some bugs in here, you can contact me at my [twitter account](https://twitter.com/).
