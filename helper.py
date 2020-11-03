@@ -153,10 +153,10 @@ def combined_with_fixed_thresh_range(img):
 
 def get_src_points(img_size):
     return np.float32(
-            [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
+            [[(img_size[0] / 2) - 60, img_size[1] / 2 + 100],
              [((img_size[0] / 6) + 20), img_size[1]],
              [(img_size[0] * 5 / 6) + 60, img_size[1]],
-             [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
+             [(img_size[0] / 2 + 60), img_size[1] / 2 + 100]])
 
 
 def get_dst_points(img_size):
@@ -310,7 +310,7 @@ def reverse_colored_warp_image(binary_warped, left_fit_x, right_fit_x, ploty,
 
 
 def search_around_poly(binary_warped, left_fit, right_fit):
-    margin = 100  # Margin(+/-) around previous polynomial
+    margin = 110  # Margin(+/-) around previous polynomial
 
     # Grab activated pixels
     nonzero = binary_warped.nonzero()
