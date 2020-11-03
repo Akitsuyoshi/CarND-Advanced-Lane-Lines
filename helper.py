@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-import os
 
 
 def plot_two_image(image_1, image_2, title_1, title_2):
@@ -22,16 +21,13 @@ def plot_images(images):
         plt.imshow(image)
 
 
-def get_image(image_path):
-    return cv2.imread(image_path)
+def gaussian_blur(img, kernel_size):
+    """Applies a Gaussian Noise kernel"""
+    return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
 
 
-def get_rgb_image(image):
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-
-def save_image(image_path, image):
-    cv2.imwrite(image_path, image)
+def grayscale_image(img):
+    return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 
 # def get_resize_image(image, resized_shape=(250, 145)):
@@ -51,12 +47,12 @@ def get_obj_image_points(fx, fy, image_path_list=[]):
 
     # Iterate throuch chessboard to get its corners
     for f_name in image_path_list:
-        img = get_image(f_name)
+        img = cv2.imread(f_name)
         # COLOR_BGR2GRAY for cv2.imgread
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Find the corners
-        ret, corners = cv2.findChessboardCorners(gray, (fx, fy), None)
+        ret, corners = cv2.findChessboardCorners(img, (fx, fy), None)
 
         if ret is True:
             objpoints.append(objp)
@@ -65,29 +61,31 @@ def get_obj_image_points(fx, fy, image_path_list=[]):
 
 
 # Save resulted image from passed func, by 250 * 145 size
-def save_images(folder_name, image_path_list=[]):
-    for img_path in image_path_list:
-        img = get_image(img_path)
-        res = cv2.resize(img, dsize=(250, 145))
+# def save_images(folder_name, image_path_list=[]):
+#     for img_path in image_path_list:
+#         img = cv2.imread(img_path)
+#         res = cv2.resize(img, dsize=(250, 145))
 
-        img_path = 'output_images/'+folder_name+'/'+os.path.basename(img_path)
-        cv2.imwrite(img_path, res)
+#         img_path = 'output_images/'+folder_name+'/'+os.path.basename(img_path)
+#         cv2.imwrite(img_path, res)
 
 
-def undistort_image(img, obj_p, img_p):
-    img_shape = (img.shape[1], img.shape[0])
-    ret, mtx, dist, _, _ = cv2.calibrateCamera(obj_p, img_p, img_shape,
-                                               None, None)
+def calibrate_camera(obj_p, img_p, img_size):
+    # ret, mtx, dist, _, _
+    return cv2.calibrateCamera(obj_p, img_p, img_size, None, None)
 
+
+def undistort_image(img, mtx, dist):
     return cv2.undistort(img, mtx, dist, None, mtx)
 
 
 def mag_thresh(img, sobel_kernel=3, thresh=(0, 255)):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = gaussian_blur(img, kernel_size=9)
 
     # Gradient in x and y
-    sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
-    sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    sobel_x = cv2.Sobel(img, cv2.CV_64F, 1, 0)
+    sobel_y = cv2.Sobel(img, cv2.CV_64F, 0, 1)
     # Calculate magnitude
     abs_sobel = np.sqrt(sobel_x**2, sobel_y**2)
     scaled_sobel = np.uint8(255*abs_sobel/np.max(abs_sobel))
@@ -100,11 +98,12 @@ def mag_thresh(img, sobel_kernel=3, thresh=(0, 255)):
 
 
 def dir_thresh(img, sobel_kernel=3, thresh=(0, np.pi/2)):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = gaussian_blur(img, kernel_size=9)
 
     # Gradient in x and y
-    sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
-    sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1)
+    sobel_x = cv2.Sobel(img, cv2.CV_64F, 1, 0)
+    sobel_y = cv2.Sobel(img, cv2.CV_64F, 0, 1)
     abs_grad_dir = np.arctan2(np.absolute(sobel_x), np.absolute(sobel_y))
 
     binary = np.zeros_like(abs_grad_dir)
@@ -114,9 +113,10 @@ def dir_thresh(img, sobel_kernel=3, thresh=(0, np.pi/2)):
 
 
 def col_thresh(img, thresh=(0, 255)):
-    hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    # Get s channel
-    s = hls[:, :, 2]
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
+    img = gaussian_blur(img, kernel_size=3)
+    # Get S channel
+    s = img[:, :, 2]
 
     binary = np.zeros_like(s)
     binary[(s > thresh[0]) & (s <= thresh[1])] = 1
@@ -125,9 +125,10 @@ def col_thresh(img, thresh=(0, 255)):
 
 
 def sobel_x_thresh(img, thresh=(0, 255)):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # img = gaussian_blur(img, kernel_size=9)
 
-    sobel = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
+    sobel = cv2.Sobel(img, cv2.CV_64F, 1, 0)
     abs_sobel = np.absolute(sobel)
     scaled_sobel = np.uint8(255 * abs_sobel / np.max(abs_sobel))
 
@@ -138,10 +139,10 @@ def sobel_x_thresh(img, thresh=(0, 255)):
 
 
 def combined_with_fixed_thresh_range(img):
-    mag_binary = mag_thresh(img, sobel_kernel=15, thresh=(80/3, 80))
+    mag_binary = mag_thresh(img, sobel_kernel=15, thresh=(100/3, 100))
     dir_binary = dir_thresh(img, sobel_kernel=15, thresh=(0.6, 1.3))
-    col_binary = col_thresh(img, thresh=(135, 255))
-    sobel_x_binary = sobel_x_thresh(img, thresh=(30, 110))
+    col_binary = col_thresh(img, thresh=(140, 255))
+    sobel_x_binary = sobel_x_thresh(img, thresh=(35, 100))
 
     combined_binary = np.zeros_like(col_binary)
     combined_binary[(col_binary == 1) |
@@ -184,7 +185,7 @@ def find_lane_pixels(binary_warped):
     right_x_current = np.argmax(hist[mid_p:]) + mid_p
 
     # HYPER PARAMS
-    n_windows = 12
+    n_windows = 9
     margin = 100  # width of windows, +/- margin
     minpi_x = 50
 
@@ -208,16 +209,17 @@ def find_lane_pixels(binary_warped):
         win_xright_low = right_x_current - margin
         win_xright_high = right_x_current + margin
 
+        # For Visualization
         # Draw windows on image
-        cv2.rectangle(output_img,
-                      (win_xleft_low, win_y_low),
-                      (win_xleft_high, win_y_high),
-                      (0, 255, 0), 3)
-        
-        cv2.rectangle(output_img,
-                      (win_xright_low, win_y_low),
-                      (win_xright_high, win_y_high),
-                      (0, 255, 0), 3)
+        # cv2.rectangle(output_img,
+        #               (win_xleft_low, win_y_low),
+        #               (win_xleft_high, win_y_high),
+        #               (0, 255, 0), 3)
+
+        # cv2.rectangle(output_img,
+        #               (win_xright_low, win_y_low),
+        #               (win_xright_high, win_y_high),
+        #               (0, 255, 0), 3)
 
         # Get nonzero pixels within windows
         good_left_inds = ((nonzero_y >= win_y_low) &
@@ -252,12 +254,11 @@ def find_lane_pixels(binary_warped):
     right_x = nonzero_x[right_lane_inds]
     right_y = nonzero_y[right_lane_inds]
 
-    return left_x, left_y, right_x, right_y, output_img
+    # output_img is for visualization
+    return left_x, left_y, right_x, right_y
 
 
-def fit_polynomial(binary_warped):
-    left_x, left_y, right_x, right_y, output_img = find_lane_pixels(binary_warped)
-
+def fit_polynomial(binary_warped, left_x, left_y, right_x, right_y):
     # Get y = m * x ** 2 + n * x + b
     # each polyfit returns list, [m, n, b]
     left_fit = np.polyfit(left_y, left_x, 2)
@@ -274,12 +275,59 @@ def fit_polynomial(binary_warped):
         left_fit_x = ploty ** 2 + ploty
         right_fit_x = ploty ** 2 + ploty
 
+    # For Visualization
+    # Plots left and right line
     # Colors in the left and right regions
-    output_img[left_y, left_x] = [255, 0, 0]
-    output_img[right_y, right_x] = [0, 0, 255]
+    # output_img[left_y, left_x] = [255, 0, 0]
+    # output_img[right_y, right_x] = [0, 0, 255]
+    # plt.plot(left_fit_x, ploty, color='yellow')
+    # plt.plot(right_fit_x, ploty, color='yellow')
 
-    # Plots
-    plt.plot(left_fit_x, ploty, color='yellow')
-    plt.plot(right_fit_x, ploty, color='yellow')
+    return ploty, left_fit_x, right_fit_x
 
-    return output_img, left_fit, right_fit
+
+def reverse_colored_warp_image(binary_warped, left_fit_x, right_fit_x, ploty,
+                               src, dst):
+    # Get warped image with line
+    zero_binary_warped = np.zeros_like(binary_warped).astype(np.uint8)
+    color_warp = np.dstack((zero_binary_warped,
+                            zero_binary_warped,
+                            zero_binary_warped))
+
+    pts_left = np.array([np.transpose(np.vstack([left_fit_x, ploty]))])
+    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fit_x, ploty])))])
+    pts = np.hstack((pts_left, pts_right))
+
+    # Draw line onto the warped blank image
+    cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
+
+    img_size = (binary_warped.shape[1], binary_warped.shape[0])
+    # Warp the blank back to original image space using inverse perspective
+    # Here, getPerspectiveTransform params order, dst to src
+    return cv2.warpPerspective(color_warp,
+                               cv2.getPerspectiveTransform(dst, src),
+                               img_size)
+
+
+def search_around_poly(binary_warped, left_fit, right_fit):
+    margin = 100  # Margin(+/-) around previous polynomial
+
+    # Grab activated pixels
+    nonzero = binary_warped.nonzero()
+    nonzero_y = np.array(nonzero[0])
+    nonzero_x = np.array(nonzero[1])
+
+    left_polynomial = left_fit[0] * (nonzero_y ** 2) + left_fit[1] * nonzero_y + left_fit[2]
+    left_lane_inds = ((nonzero_x > (left_polynomial - margin)) &
+                      (nonzero_x < (left_polynomial + margin)))
+
+    right_polynomial = right_fit[0] * (nonzero_y ** 2) + right_fit[1] * nonzero_y + right_fit[2]
+    right_lane_inds = ((nonzero_x > (right_polynomial - margin)) &
+                       (nonzero_x < (right_polynomial + margin)))
+
+    left_x = nonzero_x[left_lane_inds]
+    left_y = nonzero_y[left_lane_inds]
+    right_x = nonzero_x[right_lane_inds]
+    right_y = nonzero_y[right_lane_inds]
+
+    return left_x, left_y, right_x, right_y
