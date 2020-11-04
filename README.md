@@ -28,7 +28,6 @@ You can see the first project at [this link](https://github.com/Akitsuyoshi/CarN
   - [Where my current pipeline will likey fail](#where-my-current-pipeline-will-likey-fail)
   - [Improvements to pipeline](#improvements-to-pipeline)
   - [Future Feature](#future-feature)
-- [References](#references)
 - [Issues](#issues)
 
 ---
@@ -42,13 +41,38 @@ Here is my goal of this project:
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
-[video1]: ./project_video.mp4 "Video"
+[image1]: ./output_images/original_chess.jpg "Original"
+[image2]: ./output_images/undist_chess.jpg "Undistorted"
+[image3]: ./output_images/test1.jpg "Test1"
+[image4]: ./output_images/test2.jpg "Test2"
+[image5]: ./output_images/test3.jpg "Test3"
+[image6]: ./output_images/undist_test1.jpg "Test1"
+[image7]: ./output_images/undist_test2.jpg "Test2"
+[image8]: ./output_images/undist_test3.jpg "Test3"
+[image9]: ./output_images/binary_images0.jpg "Binary1"
+[image10]: ./output_images/binary_images1.jpg "Binary2"
+[image11]: ./output_images/binary_images2.jpg "Binary3"
+[image11]: ./output_images/binary_images2.jpg "Binary3"
+[image12]: ./output_images/warped_test1.jpg "Warped1"
+[image13]: ./output_images/warped_test2.jpg "Warped2"
+[image14]: ./output_images/warped_test3.jpg "Warped3"
+[image15]: ./output_images/red_lined0.jpg "ledline1"
+[image16]: ./output_images/red_lined1.jpg "ledline2"
+[image17]: ./output_images/red_lined2.jpg "ledline3"
+[image18]: ./output_images/red_lined3.jpg "ledline4"
+[image19]: ./output_images/red_lined4.jpg "ledline5"
+[image20]: ./output_images/red_lined5.jpg "ledline6"
+[image21]: ./output_images/binary_warped_images0.jpg "Binary warped1"
+[image22]: ./output_images/binary_warped_images1.jpg "Binary warped2"
+[image23]: ./output_images/binary_warped_images2.jpg "Binary warped3"
+
+[output1]: ./output_images/test_output0.jpg
+[output2]: ./output_images/test_output1.jpg
+[output3]: ./output_images/test_output2.jpg
+[output4]: ./output_images/test_output3.jpg
+[output5]: ./output_images/test_output4.jpg
+[output6]: ./output_images/test_output5.jpg
+[output7]: ./project_output.gif
 
 ---
 
@@ -56,6 +80,7 @@ Here is my goal of this project:
 
 The steps for making that pipeline are the following:
 
+- Apply Gaussian blur to reduce noise of image (I don't go into detail cuz its alreay done in [my previous project](https://github.com/Akitsuyoshi/CarND-LaneLines-P1))
 - Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
 - Apply a distortion correction to raw images.
 - Use color transforms, gradients, etc., to create a thresholded binary image.
@@ -75,62 +100,101 @@ docker run -it --rm --entrypoint "/run.sh" -p 8888:8888 -v `pwd`:/src udacity/ca
 
 ### 1 Camera calibration
 
-(1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image)
+Here is the code that I used in this part, each functions are located in [helper.py](./helper.py).
 
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+|Output         |Functions      |
+|:--------------|:--------------|
+|Ojbect and image ponits|`get_obj_image_points`|
+|Calibrate camera|`calibrate_camera`(`cv2.calibrateCamera`)|
+|Undistort image|`undistort_image`(`cv2.undistort`)|
 
-I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
+I started to see the chessboard images, in [camera_cal/](./camera_cal) folder. And then I write the `get_obj_image_points` function to get "object points" and "image points". Object points represents three cordinates, like (x, y, z) of the chessboard corners in each images. I assumed the chessboard is fixed on the wall, which means `z = 0`.
 
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
+After I got object points and image points from `get_obj_image_points`, I compute camera calibration and distortion coefficients using `calibrate_camera`.
 
-![alt text][image1]
+Then I got matrix and distortion coefficients value from `calibrate_camere`, I undistort original chessboard images by `undistort_image`.
+
+|Original Image         |Unistorted Image       |
+|:---------------------:|:---------------------:|
+|![alt text][image1]  |![alt text][image2]    |
 
 ### 2 Distortion correction
 
-(1. Provide an example of a distortion-corrected image.)
+Here is the code I used in this part, each functions are located in [helper.py](./helper.py).
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
-![alt text][image2]
+|Output         |Functions      |
+|:--------------|:--------------|
+|Undistort Image|`undistort_image`(`cv2.undistort`)|
+
+`undistort_image`'s parameters, object points and image points are got from camera calibration step.
+
+I applied `undistort_image` to some of my test images. The output, undistorted images look like this.
+
+|Original Image         |Unistorted Image       |
+|:---------------------:|:---------------------:|
+|![alt text][image3]  |![alt text][image6]    |
+|![alt text][image4]  |![alt text][image7]    |
+|![alt text][image5]  |![alt text][image8]    |
 
 ### 3 Color/gradient threshold
 
-(2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.)
+Here is the code I used in this part, each functions are located in [helper.py](./helper.py).
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+|Output         |Functions      |
+|:--------------|:--------------|
+|Magnitude threshold|`mag_thresh`|
+|Direction of Gradient|`dir_thresh`|
+|Color threshold|`col_thresh`|
+|Sobel threshold on x axis|`sobel_x_thresh`|
 
-![alt text][image3]
+
+I used a combination of color and gradient thresholds to extract binary image from undistorted image.
+
+Here's an example of binary images resulted from combination threshold.
+
+|Original Image         |Binary Image       |
+|:---------------------:|:---------------------:|
+|![alt text][image3]  |![alt text][image9]    |
+|![alt text][image4]  |![alt text][image10]    |
+|![alt text][image5]  |![alt text][image11]    |
 
 ### 4 Perspective transform
 
-(3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.)
+Here is the code I used in this part, each functions are located in [helper.py](./helper.py).
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+|Output         |Functions      |
+|:--------------|:--------------|
+|Src points|`get_src_points`|
+|dst points|`get_dst_points`|
+|Warp Image|`warpe_image`(`cv2.warpPerspective`)|
 
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
+I chose hard code way to get src and dst points for perspective. I may seem precise, but it can mostly work for test video.
+Src and dst points are defined in `get_src_points` and `get_dst_points` respectively.
 
-This resulted in the following source and destination points:
+With src and dst points, `warpe_image` returns warped image like this one. `warpe_image` function uses `cv2.warpPerspective` internelly to get warp image.
 
-| Source        | Destination   | 
-|:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+|Original Image         |Warped Image       |
+|:---------------------:|:---------------------:|
+|![alt text][image3]  |![alt text][image12]    |
+|![alt text][image4]  |![alt text][image13]    |
+|![alt text][image5]  |![alt text][image14]    |
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+To make sure that my trasform above works corecctly, I compare each src points in orginal image with dst points in warped image.
+The results of that are following.
 
-![alt text][image4]
+|Src points drawn in original         |Dst points drawn in warped       |
+|:---------------------:|:---------------------:|
+|![alt text][image15]  |![alt text][image18]    |
+|![alt text][image16]  |![alt text][image19]    |
+|![alt text][image17]  |![alt text][image20]    |
+
+I checked to apply perspective transfrom to binary iamges as well because later I use `warpe_image` to binary image in my pipeline.
+
+|Binary Image         |Binary Warped Image      |
+|:---------------------:|:---------------------:|
+|![alt text][image9]  |![alt text][image21]    |
+|![alt text][image10]  |![alt text][image22]    |
+|![alt text][image11]  |![alt text][image23]    |
 
 ### 5 Detect lane lines
 
@@ -160,11 +224,20 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 ### Image result
 
+The output from `image_pipeline` looks like this.
+
+||||
+|:---------------------:|:---------------------:|:---------------------:|
+|![alt text][output1] |![alt text][output2]|![alt text][output3]|
+|![alt text][output4] |![alt text][output5]|![alt text][output6]|
+
 ### Video result
 
-(1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).)
+Here's a [link to my video result](./project_output.mp4)
 
-Here's a [link to my video result](./project_video.mp4)
+The output seems like pipeline works as expected.
+
+![alt text][output7]
 
 ---
 
@@ -177,12 +250,6 @@ Here's a [link to my video result](./project_video.mp4)
 ### Improvements to pipeline
 
 ### Future Feature
-
----
-
-## References
-
-something might be here
 
 ---
 
