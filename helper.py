@@ -60,16 +60,6 @@ def get_obj_image_points(fx, fy, image_path_list=[]):
     return objpoints, imgpoints
 
 
-# Save resulted image from passed func, by 250 * 145 size
-# def save_images(folder_name, image_path_list=[]):
-#     for img_path in image_path_list:
-#         img = cv2.imread(img_path)
-#         res = cv2.resize(img, dsize=(250, 145))
-
-#         img_path = 'output_images/'+folder_name+'/'+os.path.basename(img_path)
-#         cv2.imwrite(img_path, res)
-
-
 def calibrate_camera(obj_p, img_p, img_size):
     # ret, mtx, dist, _, _
     return cv2.calibrateCamera(obj_p, img_p, img_size, None, None)
@@ -114,7 +104,7 @@ def dir_thresh(img, sobel_kernel=3, thresh=(0, np.pi/2)):
 
 def col_thresh(img, thresh=(0, 255)):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    img = gaussian_blur(img, kernel_size=3)
+    img = gaussian_blur(img, kernel_size=11)
     # Get S channel
     s = img[:, :, 2]
 
@@ -138,25 +128,12 @@ def sobel_x_thresh(img, thresh=(0, 255)):
     return binary
 
 
-def combined_with_fixed_thresh_range(img):
-    mag_binary = mag_thresh(img, sobel_kernel=15, thresh=(100/3, 100))
-    dir_binary = dir_thresh(img, sobel_kernel=15, thresh=(0.6, 1.3))
-    col_binary = col_thresh(img, thresh=(140, 255))
-    sobel_x_binary = sobel_x_thresh(img, thresh=(35, 100))
-
-    combined_binary = np.zeros_like(col_binary)
-    combined_binary[(col_binary == 1) |
-                    (sobel_x_binary == 1) |
-                    (mag_binary == 1) & (dir_binary == 1)] = 1
-    return combined_binary
-
-
 def get_src_points(img_size):
     return np.float32(
-            [[(img_size[0] / 2) - 60, img_size[1] / 2 + 100],
+            [[(img_size[0] / 2) - 20, img_size[1] / 2 + 90],
              [((img_size[0] / 6) + 20), img_size[1]],
              [(img_size[0] * 5 / 6) + 60, img_size[1]],
-             [(img_size[0] / 2 + 60), img_size[1] / 2 + 100]])
+             [(img_size[0] / 2 + 60), img_size[1] / 2 + 90]])
 
 
 def get_dst_points(img_size):
@@ -177,7 +154,7 @@ def warpe_image(img, src, dst):
 def find_lane_pixels(binary_warped):
     # Take the histogram of bottom half of binary
     hist = np.sum(binary_warped[binary_warped.shape[0] // 2:, :], axis=0)
-    output_img = np.dstack((binary_warped, binary_warped, binary_warped))
+    # output_img = np.dstack((binary_warped, binary_warped, binary_warped))
 
     # Get start point xpoint for left and right line
     mid_p = np.int(hist.shape[0] // 2)
@@ -185,7 +162,7 @@ def find_lane_pixels(binary_warped):
     right_x_current = np.argmax(hist[mid_p:]) + mid_p
 
     # HYPER PARAMS
-    n_windows = 9
+    n_windows = 8
     margin = 100  # width of windows, +/- margin
     minpi_x = 50
 
@@ -259,8 +236,6 @@ def find_lane_pixels(binary_warped):
 
 
 def fit_polynomial(binary_warped, left_x, left_y, right_x, right_y):
-    # Get y = m * x ** 2 + n * x + b
-    # each polyfit returns list, [m, n, b]
     left_fit = np.polyfit(left_y, left_x, 2)
     right_fit = np.polyfit(right_y, right_x, 2)
 
@@ -283,7 +258,7 @@ def fit_polynomial(binary_warped, left_x, left_y, right_x, right_y):
     # plt.plot(left_fit_x, ploty, color='yellow')
     # plt.plot(right_fit_x, ploty, color='yellow')
 
-    return ploty, left_fit_x, right_fit_x
+    return ploty, left_fit_x, right_fit_x, left_fit, right_fit
 
 
 def reverse_colored_warp_image(binary_warped, left_fit_x, right_fit_x, ploty,
@@ -310,7 +285,7 @@ def reverse_colored_warp_image(binary_warped, left_fit_x, right_fit_x, ploty,
 
 
 def search_around_poly(binary_warped, left_fit, right_fit):
-    margin = 110  # Margin(+/-) around previous polynomial
+    margin = 150  # Margin(+/-) around previous polynomial
 
     # Grab activated pixels
     nonzero = binary_warped.nonzero()
@@ -331,3 +306,54 @@ def search_around_poly(binary_warped, left_fit, right_fit):
     right_y = nonzero_y[right_lane_inds]
 
     return left_x, left_y, right_x, right_y
+
+
+def find_lane_pixels_by_line(binary_warped, line):
+    """Requied line param, line is Line class instance"""
+    if (line.is_detected is False):
+        # Extract each pixels on lane
+        left_x, left_y, right_x, right_y = find_lane_pixels(binary_warped)
+    else:
+        left_x, left_y, right_x, right_y = search_around_poly(binary_warped,
+                                                              line.recent_left_fit,
+                                                              line.recent_right_fit)
+    return left_x, left_y, right_x, right_y
+
+
+def xy_merter_per_pix():
+    """ Return: meter on x and y axis per pixel """
+    return 3.7/700, 30/720
+
+
+def measure_pos_from_center(img_size, left_x, right_x):
+    xm_per_pix, _ = xy_merter_per_pix()
+    # Center of found lane in image
+    lane_center = left_x[-1] + ((right_x[-1] - left_x[-1]) / 2)
+    # Diff between center of lane - position of vehicle
+    offset = img_size[0] / 2 - lane_center
+
+    return offset * xm_per_pix
+
+
+def measure_curvature(ploty, left_fit, right_fit):
+    xm_per_pix, ym_per_pix = xy_merter_per_pix()
+    y_eval = np.max(ploty)
+
+    left_curved = ((1 + (2*left_fit[0]*y_eval*ym_per_pix + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
+
+    right_curved = ((1 + (2*right_fit[0]*y_eval*ym_per_pix + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
+
+    return np.mean([left_curved, right_curved])
+
+
+def draw_two_text(img, position, curvature):
+    text_1 = 'Radious of Curvature = ' + str(round(curvature, 1)) + '(m)'
+    if (position < 0):
+        text_2 = 'Vehicle is ' + str(round(-position, 2)) + '(m)' + ' left of center'
+    else:
+        text_2 = 'Vehicle is ' + str(round(position, 2)) + '(m)' + ' right of center'
+
+    cv2.putText(img, text_1, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5,
+                (255, 255, 255), 3, cv2.LINE_AA)
+    cv2.putText(img, text_2, (20, 130), cv2.FONT_HERSHEY_SIMPLEX, 1.5,
+                (255, 255, 255), 3, cv2.LINE_AA)
