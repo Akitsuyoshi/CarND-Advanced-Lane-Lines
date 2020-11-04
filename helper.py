@@ -338,9 +338,13 @@ def measure_pos_from_center(img_size, left_x, right_x):
     return offset * xm_per_pix
 
 
-def measure_curvature(ploty, left_fit, right_fit):
+def measure_curvature(ploty, left_x, left_y, right_x, right_y):
     xm_per_pix, ym_per_pix = xy_merter_per_pix()
     y_eval = np.max(ploty)
+
+    # Change scale each x and y points from pixels to meter
+    left_fit = np.polyfit(left_y * ym_per_pix, left_x * xm_per_pix, 2)
+    right_fit = np.polyfit(right_y * ym_per_pix, right_x * xm_per_pix, 2)
 
     left_curved = ((1 + (2*left_fit[0]*y_eval*ym_per_pix + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
 
@@ -351,10 +355,7 @@ def measure_curvature(ploty, left_fit, right_fit):
 
 def draw_two_text(img, position, curvature):
     text_1 = 'Radious of Curvature = ' + str(round(curvature, 1)) + '(m)'
-    if (position < 0):
-        text_2 = 'Vehicle is ' + str(round(-position, 2)) + '(m)' + ' left of center'
-    else:
-        text_2 = 'Vehicle is ' + str(round(position, 2)) + '(m)' + ' right of center'
+    text_2 = 'Offset from center ' + str(abs(round(position, 2))) + '(m)'
 
     cv2.putText(img, text_1, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5,
                 (255, 255, 255), 3, cv2.LINE_AA)
