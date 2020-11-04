@@ -21,6 +21,13 @@ def plot_images(images):
         plt.imshow(image)
 
 
+def save_rgb_image(img, img_name):
+    img = cv2.cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, dsize=(250, 145))
+    img_path = 'output_images/' + img_name + '.jpg'
+    cv2.imwrite(img_path, img)
+
+
 def gaussian_blur(img, kernel_size):
     """Applies a Gaussian Noise kernel"""
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
@@ -28,10 +35,6 @@ def gaussian_blur(img, kernel_size):
 
 def grayscale_image(img):
     return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-
-# def get_resize_image(image, resized_shape=(250, 145)):
-#     return cv2.resize(image, dsize=resized_shape)
 
 
 # Get obj and image points from given image
