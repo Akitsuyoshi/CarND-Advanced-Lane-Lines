@@ -22,7 +22,7 @@ def plot_images(images):
 
 
 def save_rgb_image(img, img_name):
-    img = cv2.cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, dsize=(250, 145))
     img_path = 'output_images/' + img_name + '.jpg'
     cv2.imwrite(img_path, img)
@@ -279,16 +279,13 @@ def reverse_colored_warp_image(binary_warped, left_fit_x, right_fit_x, ploty,
     # Draw line onto the warped blank image
     cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
 
-    img_size = (binary_warped.shape[1], binary_warped.shape[0])
     # Warp the blank back to original image space using inverse perspective
     # Here, getPerspectiveTransform params order, dst to src
-    return cv2.warpPerspective(color_warp,
-                               cv2.getPerspectiveTransform(dst, src),
-                               img_size)
+    return warpe_image(color_warp, dst, src)
 
 
 def search_around_poly(binary_warped, left_fit, right_fit):
-    margin = 150  # Margin(+/-) around previous polynomial
+    margin = 120  # Margin(+/-) around previous polynomial
 
     # Grab activated pixels
     nonzero = binary_warped.nonzero()
@@ -313,8 +310,7 @@ def search_around_poly(binary_warped, left_fit, right_fit):
 
 def find_lane_pixels_by_line(binary_warped, line):
     """Requied line param, line is Line class instance"""
-    if (line.is_detected is False):
-        # Extract each pixels on lane
+    if line.is_detected is False:
         left_x, left_y, right_x, right_y = find_lane_pixels(binary_warped)
     else:
         left_x, left_y, right_x, right_y = search_around_poly(binary_warped,
@@ -353,11 +349,11 @@ def measure_curvature(ploty, left_x, left_y, right_x, right_y):
     return np.mean([left_curved, right_curved])
 
 
-def draw_two_text(img, position, curvature):
-    text_1 = 'Radious of Curvature = ' + str(round(curvature, 1)) + '(m)'
-    text_2 = 'Offset from center ' + str(abs(round(position, 2))) + '(m)'
+def draw_text(img, text, org=(0, 0)):
+    cv2.putText(img, text, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5,
+                (255, 255, 255), 3, cv2.LINE_AA)
 
-    cv2.putText(img, text_1, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.5,
-                (255, 255, 255), 3, cv2.LINE_AA)
-    cv2.putText(img, text_2, (20, 130), cv2.FONT_HERSHEY_SIMPLEX, 1.5,
-                (255, 255, 255), 3, cv2.LINE_AA)
+
+def weighted_image(img, initial_img, α=1., β=0.3, γ=0.):
+    """img and initial_img must be the same shape"""
+    return cv2.addWeighted(initial_img, α, img, β, γ)
