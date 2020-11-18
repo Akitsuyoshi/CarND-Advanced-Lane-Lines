@@ -19,7 +19,7 @@ You can see the first project at [this link](https://github.com/Akitsuyoshi/CarN
   - [4 Perspective transform](#4-perspective-transform)
   - [5 Detect lane lines](#5-detect-lane-lines)
   - [6 Determine lane curvature](#6-determine-lane-curvature)
-  - [7 Warp lane boundaries](#7-warp-lane-boundaries)
+  - [7 Warplane boundaries](#7-warplane-boundaries)
   - [Pipeline conclusion](#pipeline-conclusion)
 - [Pipeline Output](#pipeline-output)
   - [Image result](#image-result)
@@ -34,9 +34,9 @@ You can see the first project at [this link](https://github.com/Akitsuyoshi/CarN
 
 ## Overview
 
-Here is my goal of this project:
+Here is my goal for this project:
 
-- Make pipeline to identify the lane boundaries in a video from a front-facing camera on a car
+- Make a pipeline to identify the lane boundaries in a video from a front-facing camera on a car
 - Reflect on my work
 
 [//]: # (Image References)
@@ -90,19 +90,19 @@ The input image(or video frame) and expected output from pipeline looks like thi
 
 The steps for making that pipeline are the following:
 
-- Apply Gaussian blur to reduce noise of image (I don't go into detail cuz its alreay done in [my previous project](https://github.com/Akitsuyoshi/CarND-LaneLines-P1))
+- Apply Gaussian blur to reduce noises of image (I don't get into detail cuz its already done in [my previous project](https://github.com/Akitsuyoshi/CarND-LaneLines-P1))
 - Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
 - Apply a distortion correction to raw images.
 - Use color transforms, gradients, etc., to create a thresholded binary image.
 - Apply a perspective transform to rectify binary image ("birds-eye view").
 - Detect lane pixels and fit to find the lane boundary.
-- Determine the curvature of the lane and vehicle position with respect to center.
+- Determine the curvature of the lane and vehicle position to the center of the road.
 - Warp the detected lane boundaries back onto the original image.
 - Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
 ### 0 Setting
 
-To set it up to run this script at first, I followd this [starter kit](https://github.com/udacity/CarND-Term1-Starter-Kit) with docker. If you use mac and docker was installed successfuly, you can run jupyter notebook on your local machine by the command below.
+To set it up to run this script at first, I followed this [starter kit](https://github.com/udacity/CarND-Term1-Starter-Kit) with docker. If you use mac and docker was installed successfully, you can run jupyter notebook on your local machine by the command below.
 
 ```sh
 docker run -it --rm --entrypoint "/run.sh" -p 8888:8888 -v `pwd`:/src udacity/carnd-term1-starter-kit
@@ -110,9 +110,9 @@ docker run -it --rm --entrypoint "/run.sh" -p 8888:8888 -v `pwd`:/src udacity/ca
 
 ### 1 Camera calibration
 
-Here is the code that I made in this part, each functions are located in [helper.py](./helper.py).
+Here is the code that I made in this part, each function are located in [helper.py](./helper.py).
 
-*I omit above statement in later part. All of my functions are located in [helper.py](./helper.py). And my pipeline are in [P2.ipynb](./P2.ipynb)*
+*I omit the above statement in the later part. All of my functions are located in [helper.py](./helper.py). And my pipeline are in [P2.ipynb](./P2.ipynb)*
 
 |Output         |Functions      |
 |:--------------|:--------------|
@@ -120,7 +120,7 @@ Here is the code that I made in this part, each functions are located in [helper
 |Calibrate camera|`calibrate_camera`(`cv2.calibrateCamera`)|
 |Undistort image|`undistort_image`(`cv2.undistort`)|
 
-I started to see the chessboard images, in [camera_cal/](./camera_cal) folder. And then I write the `get_obj_image_points` function to get "object points" and "image points". Object points represents three cordinates, like (x, y, z) of the chessboard corners in each images. I assumed the chessboard is fixed on the wall, which means `z = 0`.
+I started to see the chessboard images, in [camera_cal/](./camera_cal) folder. And then I write the `get_obj_image_points` function to get "object points" and "image points". Object points represent three coordinates, like (x, y, z) of the chessboard corners in each image. I assumed the chessboard is fixed on the wall, which means `z = 0`.
 
 After I got object points and image points from `get_obj_image_points`, I compute camera calibration and distortion coefficients using `calibrate_camera`.
 
@@ -136,7 +136,7 @@ Then I got matrix and distortion coefficients value from `calibrate_camere`, I u
 |:--------------|:--------------|
 |Undistort Image|`undistort_image`(`cv2.undistort`)|
 
-`undistort_image`'s parameters, object points and image points are got from camera calibration step.
+`undistort_image`'s parameters, object points, and image points are got from the camera calibration step.
 
 I applied `undistort_image` to some of my test images. The output, undistorted images look like this.
 
@@ -155,9 +155,9 @@ I applied `undistort_image` to some of my test images. The output, undistorted i
 |Color threshold|`col_thresh`|
 |Sobel threshold on x axis|`sobel_x_thresh`|
 
-I used a combination of color and gradient thresholds to extract binary image from undistorted image.
+I used a combination of color and gradient thresholds to extract binary images from the undistorted image.
 
-Example of binary images resulted from combination threshold are following.
+Examples of binary images resulted from the combination threshold are following.
 
 |Original Image         |Binary Image       |
 |:---------------------:|:---------------------:|
@@ -173,10 +173,10 @@ Example of binary images resulted from combination threshold are following.
 |dst points|`get_dst_points`|
 |Warp Image|`warpe_image`(`cv2.warpPerspective`)|
 
-I chose hard code way to get src and dst points for perspective. I may seem precise, but it can mostly work for test video.
+I chose a hard code way to get src and dst points for perspective. I may seem precise, but it can mostly work for test video.
 Src and dst points are defined in `get_src_points` and `get_dst_points` respectively.
 
-With src and dst points, `warpe_image` returns warped image like this one. `warpe_image` function uses `cv2.warpPerspective` internelly to get warp image.
+With src and dst points, `warpe_image` returns warped image like this one. `warpe_image` function uses `cv2.warpPerspective` internally to get warp image.
 
 |Original Image         |Warped Image       |
 |:---------------------:|:---------------------:|
@@ -184,7 +184,7 @@ With src and dst points, `warpe_image` returns warped image like this one. `warp
 |![alt text][image4]  |![alt text][image13]    |
 |![alt text][image5]  |![alt text][image14]    |
 
-To make sure that my trasform above works corecctly, I compare each src points in orginal image with dst points in warped image.
+To make sure that my transform above works corectly, I compare each src points in the orginal image with dst points in the warped image.
 The results of that are following.
 
 |Src points drawn in original         |Dst points drawn in warped       |
@@ -193,7 +193,7 @@ The results of that are following.
 |![alt text][image16]  |![alt text][image19]    |
 |![alt text][image17]  |![alt text][image20]    |
 
-I checked to apply perspective transfrom to binary iamges as well because later I use `warpe_image` to binary image in my pipeline.
+I checked to apply perspective transform to binary images as well because later I use `warpe_image` to a binary image in my pipeline.
 
 |Binary Image         |Binary Warped Image      |
 |:---------------------:|:---------------------:|
@@ -209,61 +209,61 @@ I checked to apply perspective transfrom to binary iamges as well because later 
 |Poloynomial for left and right line|`fit_polynomial`|
 |Lane pixels from previous line polynomial value|`search_around_poly`|
 
-I locate lane lines from threshold warped image. To do that, I implement `find_lane_pixels`. This function returns line's x points correspoing to y points for both left and right lane lines. Basically, it starts to separate image by some certain parts, and get each points on image step by step to get pixels values for both lines.
-Those values are used in `fit_polynomial` to get line's polynomial value.
+I locate lane lines from the threshold warped image. To do that, I implement `find_lane_pixels`. This function returns the line's x points corresponding to y points for both left and right lane lines. It starts to separate the image by some certain parts and get each point on the image step by step to get pixels values for both lines.
+Those values are used in `fit_polynomial` to get the line's polynomial value.
 
 ![alt text][image25]
 
 Lines in threshold image can be represented as `y = ax**2 + bx + c`, and `fit_polynomial` returns list, like `[a, b, c]`.
 
-The following image is good example for that.
+The following image is a good example of that.
 
 ![alt text][image24]
 
-Once I got polynomial value for both line, I can use this to get line in next video frame, using `search_around_poly`.
-If pipeline failed to detect line, it start to seach by `find_lane_pixels`. `search_around_poly` functions are kinda optimazation step because it reduce to compute the finding algorithm more than `find_lane_pixels`.
+Once I got the polynomial value for both lines, I can use this to get lines in the next video frame, using `search_around_poly`.
+If the current pipeline failed to detect lines, it starts to search by `find_lane_pixels`. `search_around_poly` functions are kinda optimization steps because it reduces to compute the finding algorithm more than `find_lane_pixels`.
 
 ### 6 Determine lane curvature
 
 |Output         |Functions      |
 |:--------------|:--------------|
-|Vehicle posiiton from lane center|`measure_pos_from_center`|
+|Vehicle position from lane center|`measure_pos_from_center`|
 |Curvature of radious|`measure_curvature`|
-|Changed pixel value in image to meter|`xy_merter_per_pix`|
+|Changed pixel value in the image to meter|`xy_merter_per_pix`|
 
 Both, `measure_pos_from_center` and `measure_curvature` returns meter, not pixel on the image.
 
-### 7 Warp lane boundaries
+### 7 Warplane boundaries
 
-The output examples are shown at image result part below.
+The output examples are shown in the image result part below.
 
 |Output         |Functions      |
 |:--------------|:--------------|
 |Get reverse warped image|`reverse_colored_warp_image`(`cv2.warpPerspective`)|
 |Combined image with undistort and reverse warped|`cv2.addWeighted`|
 
-I implemented `reverse_colored_warp_image` to make warped image back to original image. Before doing so, I add color to warped image to classify which area is intersting one, in this project, lane in image. And I use `cv2.addWeighted` to put undistorted image and reverse colored warped image together.
+I implemented `reverse_colored_warp_image` to make a warped image back to the original image. Before doing so, I add color to the warped image to classify which area is an interesting one, in this project, lane in the image. And I use `cv2.addWeighted` to put the undistorted image and reverse colored warped image together.
 
 ### Pipeline conclusion
 
-I summarize steps here. The code for pipeline can be found in [P2.ipynb](./P2.ipynb)
+I summarize the steps here. The code for pipeline can be found in [P2.ipynb](./P2.ipynb)
 
 - Calibrate Camera to get object and image points
-- Undistort RGB image, convert image to grayscal, apply gaussian blur to reduce noise of image
+- Undistort RGB image, convert image to grayscale, apply gaussian blur to reduce noises of image
 - Get combined threshold binary image(each threshold are following)
   - magnitude threshold binary
   - direction of gradient binary
-  - sobel binary on x axis
+  - sobel binary on the x-axis
   - color binary
 - Get src and dst points for perspective transform
-- Make warped image
-- Extract pixel value on lane in warped image
+- Make a warped image
+- Extract pixel value on lanes in the warped image
 - Calculate position and curvature
 - Reverse warp image with colored lane
 - Put colored lane image and undistort RGB image together
 - Draw text on output image to show position and curvature
 
-Image pipeline and video pipeline works almost in the same way, but video consider previous video frame and previous found lane in its implementaion.
+Image pipeline and video pipeline works almost in the same way, but video considers previous video frame and previous found lane in its implementation.
 
 ---
 
@@ -291,21 +291,21 @@ Here's a [link to my video result](./project_output.mp4).
 
 ### Problem during my implementation
 
-When I first saved output image from each function, like undistortion, I resized it's shape. However, I realized that input image, processing image, and output image need to be the same shape. I got some error from my resizing. In reality, I also need to check image shape before any process maybe.
+When I first saved the output image from each function, like undistortion, I resized its shape. However, I realized that the input image, processing image, and output image need to be the same shape. I got some errors from my resizing. In reality, I also need to check image shape before any process maybe.
 
-Its a small pisky bug that I faced, but cv2.imread is BGR image, and sometimes another functions process RGB image. I got some color problem due to that difference.
+It's a small pisky bug that I faced, but cv2.imread is a BGR image, and sometimes other functions process RGB image. I got some color problems due to that difference.
 
-When implementing video pipeline, I noticed that some of my src and dst points definition didn't work as expected. Especially, curve or shadow time, it likely to fail. I change src accordingly, but it is still written in a hard code way. I couldn't figure it out to get those points correctly.
+When implementing the video pipeline, I noticed that some of my src and dst points definition didn't work as expected. Especially, curve or shadow time, it likely to fail. I change src accordingly, but it is still written in a hard code way. I couldn't figure it out to get those points correctly.
 
 In the part of getting curvature, I still get confused about the way to calculate it. I mostly write my code from udacity lesson code, but not sure its formula.
 
-Since it's kinda new for me to write code in python, I always put pring statement for debugging code. Might be anotehr better way that that.
+Since it's kinda new for me to write code in python, I always put `print()` statement for debugging code. Might be another better way than that.
 
 ### Improvements to pipeline
 
-My current pipeline likely to fail tracking when show or strong light appeans in image. To deal with that, One possible solution would change color threshold.
+My current pipeline likely to fail to track when a snow or strong light appears in an image. To deal with that, One possible solution would change the color threshold.
 
-Current src and dst points are written in a hardcode way. Especially src points, it's better to adjust to the image, not only by its shape but also somthing like lane condition.
+Current src and dst points are written in a hardcode way. Especially src points, it's better to adjust to the image, not only by its shape but also something like lane condition.
 
 ### Future Feature
 
