@@ -28,7 +28,7 @@ You can see the first project at [this link](https://github.com/Akitsuyoshi/CarN
   - [Problem during my implementation](#problem-during-my-implementation)
   - [Improvements to pipeline](#improvements-to-pipeline)
   - [Future Feature](#future-feature)
-- [Issues](#issues)
+- [Author](#author)
 
 ---
 
@@ -78,9 +78,9 @@ Here is my goal for this project:
 [output8]: ./output_images/test_output7.jpg
 [output9]: ./project_output.gif
 
-The input image(or video frame) and expected output from pipeline looks like this:
+The input image(or video frame) and expected output from a pipeline look like this:
 
-|Input         |Expected outupt       |
+|Input         |Expected output       |
 |:---------------------:|:---------------------:|
 |![alt text][image3]  |![alt text][output1]    |
 
@@ -90,19 +90,19 @@ The input image(or video frame) and expected output from pipeline looks like thi
 
 The steps for making that pipeline are the following:
 
-- Apply Gaussian blur to reduce noises of image (I don't get into detail cuz its already done in [my previous project](https://github.com/Akitsuyoshi/CarND-LaneLines-P1))
+- Apply Gaussian blur to reduce noises of image 
 - Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
 - Apply a distortion correction to raw images.
 - Use color transforms, gradients, etc., to create a thresholded binary image.
 - Apply a perspective transform to rectify binary image ("birds-eye view").
-- Detect lane pixels and fit to find the lane boundary.
+- Detect lane pixels and fit them to find the lane boundary.
 - Determine the curvature of the lane and vehicle position to the center of the road.
 - Warp the detected lane boundaries back onto the original image.
 - Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
 ### 0 Setting
 
-To set it up to run this script at first, I followed this [starter kit](https://github.com/udacity/CarND-Term1-Starter-Kit) with docker. If you use mac and docker was installed successfully, you can run jupyter notebook on your local machine by the command below.
+To set it up to run this script at first, I followed this [starter kit](https://github.com/udacity/CarND-Term1-Starter-Kit) with docker. If you installed docker successfully, you can run jupyter notebook on your local machine by the command below.
 
 ```sh
 docker run -it --rm --entrypoint "/run.sh" -p 8888:8888 -v `pwd`:/src udacity/carnd-term1-starter-kit
@@ -110,9 +110,9 @@ docker run -it --rm --entrypoint "/run.sh" -p 8888:8888 -v `pwd`:/src udacity/ca
 
 ### 1 Camera calibration
 
-Here is the code that I made in this part, each function are located in [helper.py](./helper.py).
+Here is the code that I made in this part, each function is located in [helper.py](./helper.py).
 
-*I omit the above statement in the later part. All of my functions are located in [helper.py](./helper.py). And my pipeline are in [P2.ipynb](./P2.ipynb)*
+*All of my functions are located in [helper.py](./helper.py). And my pipeline are in [P2.ipynb](./P2.ipynb)*
 
 |Output         |Functions      |
 |:--------------|:--------------|
@@ -157,7 +157,7 @@ I applied `undistort_image` to some of my test images. The output, undistorted i
 
 I used a combination of color and gradient thresholds to extract binary images from the undistorted image.
 
-Examples of binary images resulted from the combination threshold are following.
+Examples of binary images resulted from the combination threshold are the following.
 
 |Original Image         |Binary Image       |
 |:---------------------:|:---------------------:|
@@ -173,10 +173,10 @@ Examples of binary images resulted from the combination threshold are following.
 |dst points|`get_dst_points`|
 |Warp Image|`warpe_image`(`cv2.warpPerspective`)|
 
-I chose a hard code way to get src and dst points for perspective. I may seem precise, but it can mostly work for test video.
+I chose a hard code way to get src and dst points for perspective. Warped images may seem unprecise, but they can mostly work for the test video.
 Src and dst points are defined in `get_src_points` and `get_dst_points` respectively.
 
-With src and dst points, `warpe_image` returns warped image like this one. `warpe_image` function uses `cv2.warpPerspective` internally to get warp image.
+With src and dst points, `warpe_image` returns warped images like this one. `warpe_image` function uses `cv2.warpPerspective` internally to get the images.
 
 |Original Image         |Warped Image       |
 |:---------------------:|:---------------------:|
@@ -184,8 +184,8 @@ With src and dst points, `warpe_image` returns warped image like this one. `warp
 |![alt text][image4]  |![alt text][image13]    |
 |![alt text][image5]  |![alt text][image14]    |
 
-To make sure that my transform above works corectly, I compare each src points in the orginal image with dst points in the warped image.
-The results of that are following.
+To make sure that my transform above works correctly, I compare each src points in the original image with dst points in the warped image.
+The results of that are the following.
 
 |Src points drawn in original         |Dst points drawn in warped       |
 |:---------------------:|:---------------------:|
@@ -193,7 +193,7 @@ The results of that are following.
 |![alt text][image16]  |![alt text][image19]    |
 |![alt text][image17]  |![alt text][image20]    |
 
-I checked to apply perspective transform to binary images as well because later I use `warpe_image` to a binary image in my pipeline.
+I checked by applying a perspective transform to binary images as well because later I use `warpe_image` to a binary image in my pipeline.
 
 |Binary Image         |Binary Warped Image      |
 |:---------------------:|:---------------------:|
@@ -221,7 +221,7 @@ The following image is a good example of that.
 ![alt text][image24]
 
 Once I got the polynomial value for both lines, I can use this to get lines in the next video frame, using `search_around_poly`.
-If the current pipeline failed to detect lines, it starts to search by `find_lane_pixels`. `search_around_poly` functions are kinda optimization steps because it reduces to compute the finding algorithm more than `find_lane_pixels`.
+If the current pipeline failed to detect lines, it starts to search by `find_lane_pixels`. The `search_around_poly` functions are kinda optimization steps because it reduces to compute the finding algorithm more than `find_lane_pixels`.
 
 ### 6 Determine lane curvature
 
@@ -242,7 +242,7 @@ The output examples are shown in the image result part below.
 |Get reverse warped image|`reverse_colored_warp_image`(`cv2.warpPerspective`)|
 |Combined image with undistort and reverse warped|`cv2.addWeighted`|
 
-I implemented `reverse_colored_warp_image` to make a warped image back to the original image. Before doing so, I add color to the warped image to classify which area is an interesting one, in this project, lane in the image. And I use `cv2.addWeighted` to put the undistorted image and reverse colored warped image together.
+I implemented `reverse_colored_warp_image` to make a warped image back to the original image. Before doing so, I add color to the warped image to classify which area is an interesting one, in this project, lane in the image. And I use `cv2.addWeighted` to put the undistorted image and reverse-colored warped image together.
 
 ### Pipeline conclusion
 
@@ -291,13 +291,13 @@ Here's a [link to my video result](./project_output.mp4).
 
 ### Problem during my implementation
 
-When I first saved the output image from each function, like undistortion, I resized its shape. However, I realized that the input image, processing image, and output image need to be the same shape. I got some errors from my resizing. In reality, I also need to check image shape before any process maybe.
+When I first saved the output image from each function, like undistortion, I resized its shape. However, I realized that the input image, processing image, and output image need to be the same shape. I got some errors from my unneccessary resizing. In reality, I also need to check the original test image shape before any process maybe.
 
 It's a small pisky bug that I faced, but cv2.imread is a BGR image, and sometimes other functions process RGB image. I got some color problems due to that difference.
 
-When implementing the video pipeline, I noticed that some of my src and dst points definition didn't work as expected. Especially, curve or shadow time, it likely to fail. I change src accordingly, but it is still written in a hard code way. I couldn't figure it out to get those points correctly.
+When implementing the video pipeline, I noticed that some of my src and dst points definitions didn't work as expected. Especially, curve or shadow time, it likely to fail. I change src accordingly, but it is still written in a hard code way. I couldn't figure it out to get those points correctly for now.
 
-In the part of getting curvature, I still get confused about the way to calculate it. I mostly write my code from udacity lesson code, but not sure its formula.
+In the part of getting curvature, I still get confused about the way to calculate it. I mostly write my code from udacity lesson code, but not sure of its mathematical formula.
 
 Since it's kinda new for me to write code in python, I always put `print()` statement for debugging code. Might be another better way than that.
 
@@ -309,11 +309,10 @@ Current src and dst points are written in a hardcode way. Especially src points,
 
 ### Future Feature
 
-I will try to test my pipeline in two challenge video. I only test for [project_video.mp4](./project_video.mp4) for now.
+Will try to test my pipeline in two challenge videos. I only test for [project_video.mp4](./project_video.mp4) for now.
 
 ---
 
-## Issues
+## Author
 
-Feel free to submit issues and enhancement requests.
-If you see some bugs in here, you can contact me at my [twitter account](https://twitter.com/).
+- [Tsuyoshi Akiyama](https://github.com/Akitsuyoshi)
